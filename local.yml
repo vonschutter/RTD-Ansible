@@ -10,7 +10,7 @@
 #   - vim-nox
 #   # job: ansible-pull -o -U https://github.com/vonschutter/RTD-Ansible.git
 # tasks to complete before running roles
-- hosts: all
+- hosts: localhost
   tags: always
   become: true
   pre_tasks:
