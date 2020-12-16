@@ -4,5 +4,10 @@
   become: true
 
   tasks:
-  - name: install htop
+  - name: install apps
+    package:
+    name:
+    - htop
+    - tmux
+    - vim-nox
   # job: ansible-pull -o -U https://github.com/vonschutter/RTD-Ansible.git
