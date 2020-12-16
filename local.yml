@@ -3,10 +3,9 @@
   connection: local
   become: true
 
-  tasks:
-  - name: install apps
-    package:
-    - htop
-    - tmux
-    - vim-nox
+  tasks: install apps
+  package:
+  - htop
+  - tmux
+  - vim-nox
   # job: ansible-pull -o -U https://github.com/vonschutter/RTD-Ansible.git
