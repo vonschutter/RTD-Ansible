@@ -48,14 +48,6 @@
         state: latest
       when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian"]
 
-    # Ensure core snap is installed
-    - name: system setup | tweaks | install/update core snap
-      tags: packages,snap,todoist,workstation-packages
-      snap:
-        name: core
-        state: present
-      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian"]
-
     # distro-specific tasks for ubuntu
     - name: system setup | tweaks | disable apport in config on ubuntu-based hosts
       tags: distro,distro-setup,apport,ubuntu
