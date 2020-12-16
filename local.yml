@@ -25,7 +25,8 @@
       apt: update_cache=yes
       changed_when: False
       when: ansible_distribution in ["Debian", "Pop!_OS", "Ubuntu", "Kubuntu"]
-# set up flatpak support
+
+    # set up flatpak support
     - name: system setup | tweaks | add flatpak support
       package:
         name: flatpak
@@ -52,7 +53,7 @@
     - name: system setup | tweaks | install/update core snap
       tags: packages,snap,todoist,workstation-packages
       snap:
-        name:  core
+        name: core
         state: present
       when: ansible_distribution != "Archlinux"
 
