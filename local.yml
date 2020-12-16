@@ -66,3 +66,11 @@
         state: stopped
       failed_when: false
       when: ansible_distribution in ["Pop!_OS", "Ubuntu"]
+    - name: install packages
+      package:
+        name:
+         - htop
+         - tmux
+         - vim-nox
+         - tilix
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu"]
