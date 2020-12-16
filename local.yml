@@ -32,14 +32,19 @@
         name: flatpak
         state: present
 
+    - name: Add the GNOME Apps flatpak repository remote
+      flatpak_remote:
+        name: gnome-apps
+        state: present
+        flatpakrepo_url: https://sdk.gnome.org/gnome-apps.flatpakrepo
+
     - name: system setup | tweaks | flatpak | add flathub remote
       tags: packages,flatpak,workstation-packages
       become:
       flatpak_remote:
         name: flathub
-        flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
-        method: system
         state: present
+        flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
 
     # set up snap support
     - name: system setup | tweaks | install snapd
