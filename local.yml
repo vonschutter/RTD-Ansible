@@ -1,11 +1,27 @@
----
-- hosts: localhost
-  connection: local
-  become: true
+# ---
+# - hosts: localhost
+#   connection: local
+#   become: true
 
-  tasks: install apps
-  package:
-  - htop
-  - tmux
-  - vim-nox
-  # job: ansible-pull -o -U https://github.com/vonschutter/RTD-Ansible.git
+#   tasks: install apps
+#   package:
+#   - htop
+#   - tmux
+#   - vim-nox
+#   # job: ansible-pull -o -U https://github.com/vonschutter/RTD-Ansible.git
+# tasks to complete before running roles
+- hosts: all
+  tags: always
+  become: true
+  pre_tasks:
+    - name: pre-run | update package cache (arch)
+      tags: always
+      pacman: update_cache=yes
+      changed_when: False
+      when: ansible_distribution == "Archlinux"
+
+    - name: pre-run | update package cache (debian, etc)
+      tags: always
+      apt: update_cache=yes
+      changed_when: False
+      when: ansible_distribution in ["Debian", "Ubuntu"]
