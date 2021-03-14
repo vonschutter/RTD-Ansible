@@ -1,42 +1,30 @@
-# ---
-# - hosts: localhost
-#   connection: local
-#   become: true
-
-#   tasks: install apps
-#   package:
-#   - htop
-#   - tmux
-#   - vim-nox
-#   # job: ansible-pull -o -U https://github.com/vonschutter/RTD-Ansible.git
-# tasks to complete before running roles
+---
+################################################################################
+# Common initial setup tasks for all workstations (end user devices)
+################################################################################
 - hosts: localhost
   tags: always
   become: true
   pre_tasks:
+    # Update native package managers where necessary:
     - name: pre-run | update package cache (arch)
       tags: always
       pacman: update_cache=yes
       changed_when: False
       when: ansible_distribution == "Archlinux"
 
-    - name: pre-run | update package cache (debian, etc)
+    - name: pre-run | update package cache (debian, based systems)
       tags: always
       apt: update_cache=yes
       changed_when: False
-      when: ansible_distribution in ["Debian", "Pop!_OS", "Ubuntu", "Kubuntu"]
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
     # set up flatpak support
     - name: system setup | tweaks | add flatpak support
       package:
         name: flatpak
         state: present
-
-    - name: Add the GNOME Apps flatpak repository remote
-      flatpak_remote:
-        name: gnome-apps
-        state: present
-        flatpakrepo_url: https://sdk.gnome.org/gnome-apps.flatpakrepo
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
     - name: system setup | tweaks | flatpak | add flathub remote
       tags: packages,flatpak,workstation-packages
@@ -45,15 +33,46 @@
         name: flathub
         state: present
         flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
     # set up snap support
     - name: system setup | tweaks | install snapd
       package:
         name: snapd
-        state: latest
-      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian"]
+        state: present
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
-    # distro-specific tasks for ubuntu
+    # Install basic common software:
+    - name: install packages
+      package:
+        name:
+         - htop
+         - byobu
+         - vim-nox
+         - tilix
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
+
+    # Setup package managment on Windows:
+    - name: Install Chocolatey package manager
+      win_chocolatey:
+        name:
+          - chocolatey
+          - chocolatey-core.extension
+        state: present
+      when: ansible_os_family == Windows
+
+    - name: install the Win32-OpenSSH service
+      win_chocolatey:
+        name: openssh
+        package_params: /SSHServerFeature
+        state: present
+      when: ansible_os_family == Windows
+
+################################################################################
+# Distribution speciffic non-generic tasks
+################################################################################
+
+# distro-specific tasks for ubuntu
     - name: system setup | tweaks | disable apport in config on ubuntu-based hosts
       tags: distro,distro-setup,apport,ubuntu
       lineinfile:
@@ -61,7 +80,7 @@
         regexp: "enabled="
         line: "enabled=0"
       failed_when: false
-      when: ansible_distribution in ["Pop!_OS", "Ubuntu"]
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
     - name: system setup | tweaks | disable and stop apport service on ubuntu-based hosts
       tags: distro,distro-setup,apport,ubuntu
@@ -70,12 +89,4 @@
         enabled: no
         state: stopped
       failed_when: false
-      when: ansible_distribution in ["Pop!_OS", "Ubuntu"]
-    - name: install packages
-      package:
-        name:
-         - htop
-         - tmux
-         - vim-nox
-         - tilix
-      when: ansible_distribution in ["Pop!_OS", "Ubuntu"]
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
