@@ -1,0 +1,41 @@
+---
+# Server Asible tasks:
+# - Update all software managment indexes.
+- hosts: wks
+  tags: always
+  become: True
+  pre_tasks:
+    - name: pre-run | update package cache (arch)
+      tags: always
+      pacman: update_cache=yes
+      changed_when: False
+      when: ansible_distribution == "Archlinux"
+
+    - name: pre-run | update package cache (debian, based systems)
+      tags: always
+      apt: update_cache=yes
+      changed_when: False
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
+
+# - Update all software:
+    - name: pre-run | update sytem (SUSE)
+      tags: always
+      zypper:
+        name: '*'
+        state: latest
+        update_cache: yes
+      when: ansible_os_family in ["openSUSE", "SUSE", "SuSE", "Suse"]
+
+    - name: pre-run | update system (debian, based systems)
+      tags: always
+      apt:
+        upgrade: yes
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
+
+    - name: pre-run | update system (fedora, based systems)
+      tags: allways
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+      when: ansible_distribution in ["fedora", "Fedora", "RedHat", "redhat"]
