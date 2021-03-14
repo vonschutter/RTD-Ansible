@@ -59,14 +59,14 @@
           - chocolatey
           - chocolatey-core.extension
         state: present
-      when: ansible_os_family == Windows
+      when: ansible_os_family == Win64
 
     - name: install the Win32-OpenSSH service
       win_chocolatey:
         name: openssh
         package_params: /SSHServerFeature
         state: present
-      when: ansible_os_family == Windows
+      when: ansible_os_family == Win64
 
 ################################################################################
 # Distribution speciffic non-generic tasks
