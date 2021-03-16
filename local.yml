@@ -45,7 +45,7 @@
 
     - name: system setup | Add openSUSE repo for snap
       zypper_repository:
-        repo: 'https://download.opensuse.org/repositories/system:/snappy/openSUSE_Leap_15.2'
+        repo: 'https://download.opensuse.org/repositories/system:/snappy/openSUSE_Leap_15.2/system:snappy.repo'
         auto_import_keys: yes
         name: Cannonicals_snap_reop
         state: present
