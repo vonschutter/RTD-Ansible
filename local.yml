@@ -48,7 +48,7 @@
       package:
         name: snapd
         state: present
-      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu", "SUSE"]
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu", "Suse"]
 
     # Install basic common software:
     - name: install packages
