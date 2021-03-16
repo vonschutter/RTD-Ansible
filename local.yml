@@ -44,11 +44,11 @@
       when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
     # set up snap support
-    - name: system setup | tweaks | install snapd
+    - name: system setup | install snapd
       package:
         name: snapd
         state: present
-      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu", "SUSE"]
 
     # Install basic common software:
     - name: install packages
