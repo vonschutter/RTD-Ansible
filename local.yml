@@ -19,6 +19,14 @@
       changed_when: False
       when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
+    - name: pre-run | update sytem (SUSE)
+      tags: always
+      zypper:
+        name: '*'
+        state: latest
+        update_cache: yes
+      when: ansible_os_family in ["openSUSE", "SUSE", "SuSE", "Suse"]
+
     # set up flatpak support
     - name: system setup | tweaks | add flatpak support
       package:
