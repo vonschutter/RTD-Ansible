@@ -2,7 +2,7 @@
 ################################################################################
 # Common initial setup tasks for all workstations (end user devices)
 ################################################################################
-- hosts: localhost
+- hosts: all
   tags: always
   become: true
   pre_tasks:
