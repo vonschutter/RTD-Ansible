@@ -47,6 +47,7 @@
       zypper_repository:
         repo: 'https://download.opensuse.org/repositories/system:/snappy/openSUSE_Leap_15.2 snappy'
         auto_import_keys: yes
+        name: Cannonicals_snap_reop
         state: present
         runrefresh: yes
       when: ansible_distribution == "openSUSE Leap"
