@@ -43,14 +43,14 @@
         flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
       when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
-    - name: system setup | Add openSUSE repo for snap
-      zypper_repository:
-        repo: 'https://ftp.lysator.liu.se/pub/opensuse/repositories/system:/snappy/openSUSE_Leap_15.2/system:snappy.repo'
-        auto_import_keys: yes
-        name: Cannonicals_snap_reop
-        state: present
-        runrefresh: yes
-      when: ansible_distribution == "openSUSE Leap"
+    # - name: system setup | Add openSUSE repo for snap
+    #   zypper_repository:
+    #     repo: 'https://download.opensuse.org/repositories/system:/snappy/openSUSE_Leap_15.2/system:snappy.repo'
+    #     auto_import_keys: yes
+    #     name: Cannonicals_snap_reop
+    #     state: present
+    #     runrefresh: yes
+    #   when: ansible_distribution == "openSUSE Leap"
 
     # set up snap support
     - name: system setup | install snapd
