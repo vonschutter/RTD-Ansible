@@ -65,7 +65,6 @@
         name:
          - htop
          - byobu
-         - vim-nox
          - tilix
       when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu", "openSUSE Leap"]
 
