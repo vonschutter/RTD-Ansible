@@ -230,39 +230,39 @@
             name: azure-cli-johanburati
             state: present
             classic: true
-          when: ansible_facts['pkg_mgr'] == 'snap'
+          when: ansible_facts.packages.snap is defined or ansible_facts.cmdline.snap is defined or 'snap' in ansible_facts.packages
 
         - name: Install azure-functions-core-tools
           ansible.builtin.snap:
             name: azure-functions-core-tools-johanburati
             state: present
             classic: true
-          when: ansible_facts['pkg_mgr'] == 'snap'
+          when: ansible_facts.packages.snap is defined or ansible_facts.cmdline.snap is defined or 'snap' in ansible_facts.packages
 
         - name: Install AWS CLI
           ansible.builtin.snap:
             name: aws-cli
             state: present
             classic: true
-          when: ansible_facts['pkg_mgr'] == 'snap'
+          when: ansible_facts.packages.snap is defined or ansible_facts.cmdline.snap is defined or 'snap' in ansible_facts.packages
 
         - name: Install Google Cloud SDK
           ansible.builtin.snap:
             name: google-cloud-sdk
             state: present
-          when: ansible_facts['pkg_mgr'] == 'snap'
+          when: ansible_facts.packages.snap is defined or ansible_facts.cmdline.snap is defined or 'snap' in ansible_facts.packages
 
         - name: Install Google Cloud CLI
           ansible.builtin.snap:
             name: google-cloud-cli
             state: present
             classic: true
-          when: ansible_facts['pkg_mgr'] == 'snap'
+          when: ansible_facts.packages.snap is defined or ansible_facts.cmdline.snap is defined or 'snap' in ansible_facts.packages
 
         - name: google-bard
           ansible.builtin.snap:
             name: google-bard
             state: present
-          when: ansible_facts['pkg_mgr'] == 'snap'
+          when: ansible_facts.packages.snap is defined or ansible_facts.cmdline.snap is defined or 'snap' in ansible_facts.packages
 
 
