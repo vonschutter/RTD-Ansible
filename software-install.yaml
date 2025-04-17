@@ -250,6 +250,7 @@
           ansible.builtin.snap:
             name: google-cloud-sdk
             state: present
+            classic: true
           when: lookup('ansible.builtin.pipe', 'command -v snap') != ''
 
         - name: Install Google Cloud CLI

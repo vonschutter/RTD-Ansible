@@ -1,7 +1,7 @@
 ---
 # Server Asible tasks:
 # - Update all software managment indexes.
-- hosts: wks
+- hosts: localhost
   tags: always
   become: True
   pre_tasks:

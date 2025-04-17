@@ -1,0 +1,45 @@
+---
+- name: Run all roles
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  roles:
+    - 1_oem_themes_and_tweaks
+    - 2_oem_restricted_fonts
+    - 3d_printing_options
+    - 3_system_admin_tools
+    - adm_advanced_terminals
+    - adm_compression_tools
+    - adm_linux_subsystem_for_windows
+    - clean_remove_non_western_latin_fonts
+    - cloud_dropbox_cloud_storage
+    - cloud_management_options
+    - cloud_mega_cloud_storage
+    - developer_software
+    - digital_art_and_imaging_options
+    - internet_browsing_corporate
+    - internet_browsing_private
+    - media_audio_editing_options
+    - media_players
+    - media_streaming_servers
+    - media_streaming_software
+    - office_cad_software_options
+    - office_social_collaboration_and_communicaiton
+    - office_standard_apps
+    - rdp_anydesk_remote_desktop
+    - rdp_chrome_remote_desktop
+    - rdp_citrix_app
+    - rdp_remmina_remote_desktop
+    - rdp_rustdesk_remote_desktop
+    - rdp_team_viewer_remote_desktop
+    - sec_network_security
+    - sec_password_management
+    - sec_proton_suite_of_ecrypted_services
+    - sec_secure_communication_options
+    - sec_secure_storage
+    - sec_vpn_software
+    - top_curated_games_for_linux
+    - video_editing_options
+    - virtualization_desktop_software
+    - virtualization_virtualbox
