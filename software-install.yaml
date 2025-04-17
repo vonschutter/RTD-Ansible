@@ -28,94 +28,106 @@
             name: gnupg
             state: present
           when: ansible_facts['pkg_mgr'] in ['apt', 'dnf', 'zypper']
+- name: Add Brave Browser Repository and Install
+  block:
+    # ------------------------- APT SYSTEMS ------------------------- #
+    - name: Download Brave apt key
+      ansible.builtin.get_url:
+        url: https://brave-browser-apt-release.s3.brave.com/brave-core.asc
+        dest: /tmp/brave-core.asc
+        mode: '0644'
+      when: ansible_facts['pkg_mgr'] == 'apt'
 
-    - name: Add Brave Browser Repository and Install
-      block:
-        - name: Download Brave apt key
-          ansible.builtin.get_url:
-            url: https://brave-browser-apt-release.s3.brave.com/brave-core.asc
-            dest: /tmp/brave-core.asc
-          when: ansible_facts['pkg_mgr'] == 'apt'
+    - name: Convert Brave apt key to GPG keyring (idempotent)
+      ansible.builtin.command:
+        cmd: "gpg --dearmor /tmp/brave-core.asc > /usr/share/keyrings/brave-browser-archive-keyring.gpg"
+        creates: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+      when: ansible_facts['pkg_mgr'] == 'apt'
 
-        - name: Add Brave apt key to keyring
-          ansible.builtin.command:
-            cmd: "gpg --dearmor -o /usr/share/keyrings/brave-browser-archive-keyring.gpg /tmp/brave-core.asc"
-          when: ansible_facts['pkg_mgr'] == 'apt'
+    - name: Add Brave Browser APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"
+        state: present
+        filename: brave-browser
+      when: ansible_facts['pkg_mgr'] == 'apt'
 
-        - name: Add Brave Browser repo to APT
-          ansible.builtin.apt_repository:
-            repo: "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"
-          when: ansible_facts['pkg_mgr'] == 'apt'
+    - name: Install Brave Browser (APT)
+      ansible.builtin.apt:
+        name: brave-browser
+        state: present
+        update_cache: yes
+      when: ansible_facts['pkg_mgr'] == 'apt'
 
-        - name: Install Brave Browser on APT systems
-          ansible.builtin.apt:
-            name: brave-browser
-            update_cache: yes
-          when: ansible_facts['pkg_mgr'] == 'apt'
+    # ------------------------- DNF SYSTEMS ------------------------- #
+    - name: Add Brave repo (DNF)
+      ansible.builtin.command:
+        cmd: "dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/"
+        creates: /etc/yum.repos.d/brave-browser-rpm-release.s3.brave.com_x86_64_.repo
+      when: ansible_facts['pkg_mgr'] == 'dnf'
 
-        - name: Configure DNF for Brave Browser
-          ansible.builtin.command:
-            cmd: "dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/"
-          when: ansible_facts['pkg_mgr'] == 'dnf'
+    - name: Import Brave GPG key (DNF)
+      ansible.builtin.rpm_key:
+        key: https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+        state: present
+      when: ansible_facts['pkg_mgr'] == 'dnf'
 
-        - name: Import Brave Browser GPG Key (DNF)
-          ansible.builtin.rpm_key:
-            state: present
-            key: https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
-          when: ansible_facts['pkg_mgr'] == 'dnf'
+    - name: Install Brave Browser (DNF)
+      ansible.builtin.yum:
+        name: brave-browser
+        state: present
+      when: ansible_facts['pkg_mgr'] == 'dnf'
 
-        - name: Install Brave Browser on DNF systems
-          ansible.builtin.yum:
-            name: brave-browser
-            state: present
-          when: ansible_facts['pkg_mgr'] == 'dnf'
+    # ------------------------- ZYPPER SYSTEMS ------------------------- #
+    - name: Add Brave Browser Zypper repo
+      ansible.builtin.zypper_repository:
+        name: brave-browser
+        description: Brave Browser repository
+        repo: https://brave-browser-rpm-release.s3.brave.com/x86_64/
+        auto_import_keys: true
+        state: present
+      when: ansible_facts['pkg_mgr'] == 'zypper'
 
-        - name: Add Brave Browser repository for Zypper
-          ansible.builtin.zypper_repository:
-            name: brave-browser
-            description: Brave Browser repository
-            repo: https://brave-browser-rpm-release.s3.brave.com/x86_64/
-            state: present
-          when: ansible_facts['pkg_mgr'] == 'zypper'
+    - name: Install Brave Browser (Zypper)
+      ansible.builtin.zypper:
+        name: brave-browser
+        state: present
+      when: ansible_facts['pkg_mgr'] == 'zypper'
 
-        - name: Install Brave Browser on Zypper systems
-          ansible.builtin.zypper:
-            name: brave-browser
-            state: present
-          when: ansible_facts['pkg_mgr'] == 'zypper'
-
-        - name: Install Brave Browser on unsupported package manager
-          ansible.builtin.shell:
-            cmd: |
-              if [ -f /etc/os-release ]; then
-                . /etc/os-release
-                case "$ID" in
-                  arch)
-                    if command -v pacman >/dev/null 2>&1; then
-                      pacman -Sy --noconfirm brave-browser
-                    else
-                      echo "Pacman not found"
-                      exit 1
-                    fi
-                    ;;
-                  alpine)
-                    if command -v apk >/dev/null 2>&1; then
-                      apk add --no-cache brave-browser
-                    else
-                      echo "Apk not found"
-                      exit 1
-                    fi
-                    ;;
-                  *)
-                    echo "Unsupported package manager: $ID"
-                    exit 1
-                    ;;
-                esac
-              else
-                echo "Cannot determine the operating system."
+    # ------------------------- OTHER DISTROS ------------------------- #
+    - name: Install Brave Browser on unsupported package manager
+      ansible.builtin.shell:
+        cmd: |
+          set -e
+          if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            case "$ID" in
+              arch)
+                if command -v pacman >/dev/null 2>&1; then
+                  pacman -Sy --noconfirm brave-bin || pacman -Sy --noconfirm brave-browser
+                else
+                  echo "Pacman not found" >&2
+                  exit 1
+                fi
+                ;;
+              alpine)
+                if command -v apk >/dev/null 2>&1; then
+                  apk add --no-cache brave-browser
+                else
+                  echo "Apk not found" >&2
+                  exit 1
+                fi
+                ;;
+              *)
+                echo "Unsupported package manager: $ID" >&2
                 exit 1
-              fi
-          when: ansible_facts['pkg_mgr'] not in ['apt', 'dnf', 'zypper']
+                ;;
+            esac
+          else
+            echo "Cannot determine the operating system." >&2
+            exit 1
+          fi
+        executable: /bin/bash
+      when: ansible_facts['pkg_mgr'] not in ['apt', 'dnf', 'zypper']
 
     - name: Install VirtualBox
       block:
