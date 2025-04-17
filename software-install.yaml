@@ -1,0 +1,257 @@
+- name: Software Installation Playbook
+  hosts: workstations
+  become: true
+  vars:
+    GIT_Profile: "vonschutter"
+    bundle_prefix: "recipe_Bundle:_"
+  tasks:
+
+    - name: Ensure essential packages are installed
+      package:
+        name:
+          - curl
+          - gnupg
+          - apt-transport-https
+          - wget
+        state: present
+
+    - name: Check if required commands are available
+      block:
+        - name: Ensure curl is installed
+          package:
+            name: curl
+            state: present
+          when: ansible_facts['pkg_mgr'] in ['apt', 'dnf', 'zypper']
+
+        - name: Ensure gnupg is installed
+          package:
+            name: gnupg
+            state: present
+          when: ansible_facts['pkg_mgr'] in ['apt', 'dnf', 'zypper']
+
+    - name: Add Brave Browser Repository and Install
+      block:
+        - name: Download Brave apt key
+          ansible.builtin.get_url:
+            url: https://brave-browser-apt-release.s3.brave.com/brave-core.asc
+            dest: /tmp/brave-core.asc
+          when: ansible_facts['pkg_mgr'] == 'apt'
+
+        - name: Add Brave apt key to keyring
+          ansible.builtin.command:
+            cmd: "gpg --dearmor -o /usr/share/keyrings/brave-browser-archive-keyring.gpg /tmp/brave-core.asc"
+          when: ansible_facts['pkg_mgr'] == 'apt'
+
+        - name: Add Brave Browser repo to APT
+          ansible.builtin.apt_repository:
+            repo: "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"
+          when: ansible_facts['pkg_mgr'] == 'apt'
+
+        - name: Install Brave Browser on APT systems
+          ansible.builtin.apt:
+            name: brave-browser
+            update_cache: yes
+          when: ansible_facts['pkg_mgr'] == 'apt'
+
+        - name: Configure DNF for Brave Browser
+          ansible.builtin.command:
+            cmd: "dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/"
+          when: ansible_facts['pkg_mgr'] == 'dnf'
+
+        - name: Import Brave Browser GPG Key (DNF)
+          ansible.builtin.rpm_key:
+            state: present
+            key: https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+          when: ansible_facts['pkg_mgr'] == 'dnf'
+
+        - name: Install Brave Browser on DNF systems
+          ansible.builtin.yum:
+            name: brave-browser
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'dnf'
+
+        - name: Add Brave Browser repository for Zypper
+          ansible.builtin.zypper_repository:
+            name: brave-browser
+            description: Brave Browser repository
+            repo: https://brave-browser-rpm-release.s3.brave.com/x86_64/
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'zypper'
+
+        - name: Install Brave Browser on Zypper systems
+          ansible.builtin.zypper:
+            name: brave-browser
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'zypper'
+
+        - name: Install Brave Browser on unsupported package manager
+          ansible.builtin.shell:
+            cmd: |
+              if [ -f /etc/os-release ]; then
+                . /etc/os-release
+                case "$ID" in
+                  arch)
+                    if command -v pacman >/dev/null 2>&1; then
+                      pacman -Sy --noconfirm brave-browser
+                    else
+                      echo "Pacman not found"
+                      exit 1
+                    fi
+                    ;;
+                  alpine)
+                    if command -v apk >/dev/null 2>&1; then
+                      apk add --no-cache brave-browser
+                    else
+                      echo "Apk not found"
+                      exit 1
+                    fi
+                    ;;
+                  *)
+                    echo "Unsupported package manager: $ID"
+                    exit 1
+                    ;;
+                esac
+              else
+                echo "Cannot determine the operating system."
+                exit 1
+              fi
+          when: ansible_facts['pkg_mgr'] not in ['apt', 'dnf', 'zypper']
+
+    - name: Install VirtualBox
+      block:
+        # - name: Install VirtualBox dependencies on Debian
+        #   ansible.builtin.apt:
+        #     name:
+        #       - virtualbox
+        #       - virtualbox-dkms
+        #       - virtualbox-ext-pack
+        #       - virtualbox-guest-additions-iso
+        #     update_cache: yes
+        #   when: ansible_facts['pkg_mgr'] == 'apt'
+
+        - name: Install VirtualBox on DNF systems
+          ansible.builtin.yum:
+            name: VirtualBox
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'dnf'
+
+        - name: Install VirtualBox on Zypper systems
+          ansible.builtin.zypper:
+            name:
+              - virtualbox
+              - virtualbox-dkms
+              - virtualbox-ext-pack
+              - virtualbox-guest-additions-iso
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'zypper'
+
+        - name: Install VirtualBox on unsupported package manager
+          ansible.builtin.shell:
+            cmd: |
+              if [ -f /etc/os-release ]; then
+                . /etc/os-release
+                case "$ID" in
+                  arch)
+                    if command -v pacman >/dev/null 2>&1; then
+                      pacman -Sy --noconfirm virtualbox virtualbox-host-modules-arch
+                    else
+                      echo "Pacman not found"
+                      exit 1
+                    fi
+                    ;;
+                  alpine)
+                    if command -v apk >/dev/null 2>&1; then
+                      apk add --no-cache virtualbox
+                    else
+                      echo "Apk not found"
+                      exit 1
+                    fi
+                    ;;
+                  *)
+                    echo "Unsupported package manager: $ID"
+                    exit 1
+                    ;;
+                esac
+              else
+                echo "Cannot determine the operating system."
+                exit 1
+              fi
+          when: ansible_facts['pkg_mgr'] not in ['apt', 'dnf', 'zypper']
+
+    - name: Install System Admin Tools
+      package:
+        name:
+          - nmap
+          - synaptic
+          - ssh
+          - sshfs
+          - htop
+          - iftop
+          - nethogs
+          - glances
+        state: present
+
+    - name: Install Secure Communication Tools
+      block:
+        - name: Install Signal Desktop
+          ansible.builtin.snap:
+            name: signal-desktop
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'snap'
+
+        - name: Install Telegram Desktop
+          ansible.builtin.snap:
+            name: telegram-desktop
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'snap'
+
+        - name: Install Electron Mail
+          ansible.builtin.snap:
+            name: electron-mail
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'snap'
+
+    - name: Install Cloud Management Tools
+      block:
+        - name: Install Azure CLI
+          ansible.builtin.snap:
+            name: azure-cli
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'snap'
+
+        - name: Install AWS CLI
+          ansible.builtin.snap:
+            name: aws-cli
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'snap'
+
+        - name: Install Google Cloud SDK
+          ansible.builtin.snap:
+            name: google-cloud-sdk
+            state: present
+          when: ansible_facts['pkg_mgr'] == 'snap'
+
+        - name: Install Cloud Management Tools on unsupported package manager
+          ansible.builtin.shell:
+            cmd: |
+              if [ -f /etc/os-release ]; then
+                . /etc/os-release
+                case "$ID" in
+                  arch)
+                    if command -v pacman >/dev/null 2>&1; then
+                      pacman -Sy --noconfirm aws-cli google-cloud-sdk azure-cli
+                    else
+                      echo "Pacman not found"
+                      exit 1
+                    fi
+                    ;;
+                  alpine)
+                    if command -v apk >/dev/null 2>&1; then
+                      apk add --no-cache aws-cli google-cloud-sdk azure-cli
+                    else
+                      echo "Apk not found"
+                      exit 1
+                    fi
+                    ;;
+                  *)
+                    echo "Unsupported package manager: $ID"
