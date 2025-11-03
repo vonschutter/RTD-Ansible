@@ -43,9 +43,7 @@
 #db-[99:101]-node.example.com
 
 [localhost]
-localhost
-localhost.localdomain
-127.0.0.1
+localhost ansible_connection=local
 
 [wks]
 192.168.1.[2:199]
