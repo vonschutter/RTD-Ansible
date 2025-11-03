@@ -2,7 +2,9 @@
 ################################################################################
 # Common initial setup tasks for all workstations (end user devices)
 ################################################################################
-- hosts: wks
+- hosts: localhost
+  connection: local
+  gather_facts: yes
   tags: always
   become: true
   pre_tasks:
