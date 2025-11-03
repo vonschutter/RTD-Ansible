@@ -52,22 +52,6 @@
          - tilix
       when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
 
-    # Setup package managment on Windows:
-    - name: Install Chocolatey package manager
-      win_chocolatey:
-        name:
-          - chocolatey
-          - chocolatey-core.extension
-        state: present
-      when: ansible_facts['os_family'] == 'Windows'
-
-    - name: install the Win32-OpenSSH service
-      win_chocolatey:
-        name: openssh
-        package_params: /SSHServerFeature
-        state: present
-      when: ansible_facts['os_family'] == 'Windows'
-
 ################################################################################
 # Distribution speciffic non-generic tasks
 ################################################################################
