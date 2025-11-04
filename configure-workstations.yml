@@ -95,6 +95,13 @@
         flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
       when: ansible_distribution in (debian_like_distributions + suse_like_distributions + fedora_like_distributions + rhel_like_distributions)
 
+    - name: pre-run | update flatpak applications
+      command: flatpak update --system --assumeyes
+      register: flatpak_update
+      changed_when: >
+        "Nothing to do." not in (flatpak_update.stdout | default('') ~ flatpak_update.stderr | default(''))
+      when: ansible_distribution in (debian_like_distributions + suse_like_distributions + fedora_like_distributions + rhel_like_distributions)
+
     # set up snap support
     - name: system setup | determine snapd repo url (suse)
       set_fact:
@@ -151,6 +158,14 @@
       when:
         - ansible_distribution in (fedora_like_distributions + rhel_like_distributions)
         - ansible_service_mgr == "systemd"
+
+    - name: pre-run | refresh snap packages
+      command: snap refresh
+      register: snap_refresh
+      changed_when: >
+        "All snaps up to date." not in (snap_refresh.stdout | default('') ~ snap_refresh.stderr | default('')) and
+        "No snaps are installed yet." not in (snap_refresh.stdout | default('') ~ snap_refresh.stderr | default(''))
+      when: ansible_distribution in (debian_like_distributions + suse_like_distributions + fedora_like_distributions + rhel_like_distributions)
 
     # Install basic common software:
     - name: install packages (debian-like)
