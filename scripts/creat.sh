@@ -11,9 +11,10 @@
 set -euo pipefail
 shopt -s extglob
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Constants
 RECIPE_URL="https://raw.githubusercontent.com/vonschutter/RTD-Setup/main/core/_rtd_recipies.info"
-ROLE_BASE="./roles"
+ROLE_BASE="${SCRIPT_DIR}/../roles"
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
@@ -139,4 +140,3 @@ main() {
 }
 
 main "$@"
-

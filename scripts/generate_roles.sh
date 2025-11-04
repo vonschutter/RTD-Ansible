@@ -4,8 +4,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 RECIPE_URL="https://raw.githubusercontent.com/vonschutter/RTD-Setup/main/core/_rtd_recipies.info"
-ROLE_BASE="./roles"
+ROLE_BASE="${SCRIPT_DIR}/../roles"
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -118,4 +119,3 @@ main() {
 }
 
 main "$@"
-

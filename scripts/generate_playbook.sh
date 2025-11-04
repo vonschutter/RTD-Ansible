@@ -4,10 +4,12 @@
 
 set -euo pipefail
 
-ROLE_DIR="./roles"
-PLAYBOOK="./site.yml"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROLE_DIR="${SCRIPT_DIR}/../roles"
+PLAYBOOK="${SCRIPT_DIR}/../playbooks/site.yml"
 
 generate_playbook() {
+	mkdir -p "$(dirname "$PLAYBOOK")"
 	cat > "$PLAYBOOK" <<EOF
 ---
 - name: Run all available roles
@@ -27,4 +29,3 @@ EOF
 }
 
 generate_playbook
-
