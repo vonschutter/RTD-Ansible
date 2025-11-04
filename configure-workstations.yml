@@ -32,10 +32,24 @@
       changed_when: False
       when: ansible_distribution == "Archlinux"
 
+    - name: pre-run | upgrade packages (arch)
+      tags: always
+      pacman:
+        update_cache: yes
+        upgrade: yes
+      when: ansible_distribution == "Archlinux"
+
     - name: pre-run | update package cache (debian, based systems)
       tags: always
       apt: update_cache=yes
       changed_when: False
+      when: ansible_distribution in debian_like_distributions
+
+    - name: pre-run | upgrade packages (debian, based systems)
+      tags: always
+      apt:
+        upgrade: dist
+        update_cache: yes
       when: ansible_distribution in debian_like_distributions
 
     - name: pre-run | update package cache (opensuse)
@@ -44,11 +58,25 @@
       changed_when: False
       when: ansible_distribution in suse_like_distributions
 
+    - name: pre-run | upgrade packages (opensuse)
+      tags: always
+      ansible.builtin.zypper:
+        name: '*'
+        state: latest
+      when: ansible_distribution in suse_like_distributions
+
     - name: pre-run | update package cache (fedora/alma)
       tags: always
       ansible.builtin.dnf:
         update_cache: yes
       changed_when: False
+      when: ansible_distribution in (fedora_like_distributions + rhel_like_distributions)
+
+    - name: pre-run | upgrade packages (fedora/alma)
+      tags: always
+      ansible.builtin.dnf:
+        name: '*'
+        state: latest
       when: ansible_distribution in (fedora_like_distributions + rhel_like_distributions)
 
     # set up flatpak support
