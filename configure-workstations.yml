@@ -20,6 +20,10 @@
       - openSUSE Tumbleweed
       - SUSE Leap
       - SUSE Tumbleweed
+    fedora_like_distributions:
+      - Fedora
+    rhel_like_distributions:
+      - AlmaLinux
   pre_tasks:
     # Update native package managers where necessary:
     - name: pre-run | update package cache (arch)
@@ -40,28 +44,85 @@
       changed_when: False
       when: ansible_distribution in suse_like_distributions
 
+    - name: pre-run | update package cache (fedora/alma)
+      tags: always
+      ansible.builtin.dnf:
+        update_cache: yes
+      changed_when: False
+      when: ansible_distribution in (fedora_like_distributions + rhel_like_distributions)
+
     # set up flatpak support
-    - name: system setup | tweaks | add flatpak support
+    - name: system setup | add flatpak support
       package:
         name: flatpak
         state: present
-      when: ansible_distribution in (debian_like_distributions + suse_like_distributions)
+      when: ansible_distribution in (debian_like_distributions + suse_like_distributions + fedora_like_distributions + rhel_like_distributions)
 
-    - name: system setup | tweaks | flatpak | add flathub remote
+    - name: system setup | flatpak | add flathub remote
       tags: packages,flatpak,workstation-packages
       become:
       flatpak_remote:
         name: flathub
         state: present
         flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
-      when: ansible_distribution in (debian_like_distributions + suse_like_distributions)
+      when: ansible_distribution in (debian_like_distributions + suse_like_distributions + fedora_like_distributions + rhel_like_distributions)
 
     # set up snap support
+    - name: system setup | determine snapd repo url (suse)
+      set_fact:
+        snapd_repo_url: "{{ 'https://download.opensuse.org/repositories/system:/snappy/openSUSE_Tumbleweed' if 'Tumbleweed' in ansible_distribution else 'https://download.opensuse.org/repositories/system:/snappy/openSUSE_Leap_' ~ ansible_distribution_version }}"
+      when:
+        - ansible_distribution in suse_like_distributions
+        - "'Tumbleweed' in ansible_distribution or 'Leap' in ansible_distribution"
+
+    - name: system setup | tweaks | ensure snapd repo present (suse)
+      ansible.builtin.zypper_repository:
+        name: snappy
+        repo: "{{ snapd_repo_url }}"
+        state: present
+        autorefresh: yes
+      when: snapd_repo_url is defined
+
+    - name: system setup | configure epel (alma linux)
+      package:
+        name: epel-release
+        state: present
+      when: ansible_distribution in rhel_like_distributions
+
+    - name: system setup | configure epel next (alma linux 8)
+      package:
+        name: epel-next-release
+        state: present
+      when:
+        - ansible_distribution in rhel_like_distributions
+        - ansible_distribution_major_version | int == 8
+
     - name: system setup | tweaks | install snapd
       package:
         name: snapd
         state: present
-      when: ansible_distribution in (debian_like_distributions + suse_like_distributions)
+      when: ansible_distribution in (debian_like_distributions + suse_like_distributions + fedora_like_distributions + rhel_like_distributions)
+
+    - name: system setup | enable snapd services (suse)
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - snapd
+        - snapd.apparmor
+      when:
+        - ansible_distribution in suse_like_distributions
+        - ansible_service_mgr == "systemd"
+
+    - name: system setup | enable snapd socket (fedora/alma)
+      ansible.builtin.systemd:
+        name: snapd.socket
+        enabled: true
+        state: started
+      when:
+        - ansible_distribution in (fedora_like_distributions + rhel_like_distributions)
+        - ansible_service_mgr == "systemd"
 
     # Install basic common software:
     - name: install packages (debian-like)
@@ -81,6 +142,24 @@
          - vim
          - tilix
       when: ansible_distribution in suse_like_distributions
+
+    - name: install packages (fedora-like)
+      package:
+        name:
+         - htop
+         - byobu
+         - vim
+         - tilix
+      when: ansible_distribution in fedora_like_distributions
+
+    - name: install packages (alma linux)
+      package:
+        name:
+         - htop
+         - byobu
+         - vim
+         - tilix
+      when: ansible_distribution in rhel_like_distributions
 
 ################################################################################
 # Distribution speciffic non-generic tasks
