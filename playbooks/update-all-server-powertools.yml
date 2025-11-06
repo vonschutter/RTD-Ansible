@@ -1,0 +1,11 @@
+---
+# Server or Workstation Asible tasks:
+# 
+- hosts: all_servers
+  tags: always
+  become: true
+  pre_tasks:
+    - name: Update RTD Powertools
+      ansible.builtin.shell: rtd-update-self --autoconfirm
+     #   args:
+     #   executable: /bin/bash

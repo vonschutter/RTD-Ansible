@@ -1,0 +1,62 @@
+---
+# Server Asible tasks:
+# - Update all software managment indexes. 
+# - This will update all the software on all systems defined as servers in the hosts file. 
+# - This task supports Arch Linux, Ubuntu, Debian, SUSE and thir derivatives.
+# - A pre-task will be run to ensure that all the software indexes are updated.
+# - Additionally some mandatory configurations will be applied relating to servers.
+#
+
+- hosts: all_servers
+  tags: always
+  become: True
+  pre_tasks:
+    - name: pre-run | update package cache (arch)
+      tags: always
+      pacman: update_cache=yes
+      changed_when: False
+      when: ansible_distribution == "Archlinux"
+
+    - name: pre-run | update package cache (debian, based systems)
+      tags: always
+      apt: update_cache=yes
+      changed_when: False
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
+
+# - Update all software using the OS default package manager (deb, rpm, etc.):
+    - name: run | update sytem (SUSE)
+      tags: always
+      zypper:
+        name: '*'
+        state: latest
+        update_cache: yes
+      when: ansible_os_family in ["openSUSE", "SUSE", "SuSE", "Suse"]
+
+    - name: run | update system (debian, based systems)
+      tags: always
+      apt:
+        upgrade: yes
+      when: ansible_distribution in ["Pop!_OS", "Ubuntu", "Debian", "Kubuntu", "Xubuntu"]
+
+    - name: run | update system (fedora, based systems)
+      tags: allways
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+      when: ansible_distribution in ["fedora", "Fedora", "RedHat", "redhat"]
+
+# - Update snaps on the system: 
+    - name: run | Update SNAP contained software 
+      tags: allways
+      shell: if [[ -e /usr/bin/snap ]] ; then snap refresh ; fi
+
+# - Common Configuration items:
+# Set servers not to go to sleep by powerlid switch.
+    - name: Disable suspend on laptop lid close
+      lineinfile:
+        path: "/etc/systemd/logind.conf"
+        state: present
+        regexp: "^HandleLidSwitch="
+        line: "HandleLidSwitch=ignore"
+
