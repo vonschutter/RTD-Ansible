@@ -1,0 +1,6 @@
+---
+- name: Install lamp-server task
+  ansible.builtin.import_role:
+    name: server_metapackage_base
+  vars:
+    server_task: lamp-server

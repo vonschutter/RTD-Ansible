@@ -1,0 +1,14 @@
+---
+# Which LLM server to deploy on Ubuntu
+llm_variant: ollama  # choices: ollama, text-generation-webui
+
+# Ollama settings
+ollama_install_url: https://ollama.ai/install.sh
+ollama_models: []  # e.g. ['llama3', 'mistral']
+
+# text-generation-webui settings
+textgen_root: /opt/text-generation-webui
+textgen_repo: https://github.com/oobabooga/text-generation-webui.git
+textgen_venv: "{{ textgen_root }}/venv"
+textgen_port: 7860
+textgen_git_version: main

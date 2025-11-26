@@ -1,0 +1,41 @@
+---
+- name: Assert Ubuntu apt-based target
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+    fail_msg: "server_metapackage_base is intended for Ubuntu/Debian targets."
+
+- name: Resolve package name for task {{ server_task | default('unset') }}
+  ansible.builtin.set_fact:
+    _server_pkg_name: "{{ server_task_package_map.get(server_task, '') }}"
+
+- name: Fail when server_task is not provided or not mapped
+  ansible.builtin.fail:
+    msg: "Unknown or missing server_task '{{ server_task }}'. Update server_task_package_map or pass a valid key."
+  when: _server_pkg_name | length == 0
+
+- name: Ensure tasksel is present for task installs
+  ansible.builtin.apt:
+    name: tasksel
+    state: present
+    update_cache: yes
+  when: _server_pkg_name is search('\\^')
+
+- name: Dry-run install to confirm availability
+  ansible.builtin.command: "apt-get -s install -y {{ _server_pkg_name }}"
+  register: server_pkg_check
+  changed_when: false
+  failed_when: false
+
+- name: Install server meta-package {{ _server_pkg_name }}
+  ansible.builtin.apt:
+    name: "{{ _server_pkg_name }}"
+    state: present
+    update_cache: yes
+    install_recommends: yes
+  when: server_pkg_check.rc == 0
+
+- name: Warn if package {{ _server_pkg_name }} is unavailable on this host
+  ansible.builtin.debug:
+    msg: "Package {{ _server_pkg_name }} not available (rc={{ server_pkg_check.rc }}). Skipping."
+  when: server_pkg_check.rc != 0

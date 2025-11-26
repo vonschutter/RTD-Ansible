@@ -1,0 +1,65 @@
+---
+- name: Install text-generation-webui dependencies
+  ansible.builtin.apt:
+    name:
+      - git
+      - python3-venv
+      - python3-dev
+      - build-essential
+    state: present
+    update_cache: yes
+
+- name: Create application directory
+  ansible.builtin.file:
+    path: "{{ textgen_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Fetch text-generation-webui
+  ansible.builtin.git:
+    repo: "{{ textgen_repo }}"
+    dest: "{{ textgen_root }}"
+    version: "{{ textgen_git_version }}"
+    update: yes
+
+- name: Ensure virtualenv exists
+  ansible.builtin.command: "python3 -m venv {{ textgen_venv }}"
+  args:
+    creates: "{{ textgen_venv }}/bin/activate"
+
+- name: Install Python requirements
+  ansible.builtin.pip:
+    requirements: "{{ textgen_root }}/requirements.txt"
+    virtualenv: "{{ textgen_venv }}"
+    extra_args: "--upgrade"
+
+- name: Create systemd service for text-generation-webui
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/text-generation-webui.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Text Generation WebUI
+      After=network.target
+
+      [Service]
+      Type=simple
+      WorkingDirectory={{ textgen_root }}
+      ExecStart={{ textgen_venv }}/bin/python server.py --listen --listen-host 0.0.0.0 --port {{ textgen_port }}
+      Restart=on-failure
+      User=root
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Reload systemd units
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Start text-generation-webui
+  ansible.builtin.systemd:
+    name: text-generation-webui
+    enabled: true
+    state: started

@@ -1,0 +1,6 @@
+---
+- name: Install postgresql-server meta-package
+  ansible.builtin.import_role:
+    name: server_metapackage_base
+  vars:
+    server_task: postgresql-server

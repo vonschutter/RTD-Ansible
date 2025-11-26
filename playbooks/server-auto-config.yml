@@ -1,0 +1,30 @@
+---
+- name: Configure Ubuntu server meta-packages and optional LLM
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  vars:
+    # Provide server tasks to install (tasksel/apt meta packages).
+    # Examples: ubuntu-server, openssh-server, lamp-server, dns-server, mail-server, samba-server, print-server, postgresql-server
+    server_tasks: []
+
+    # Enable and select LLM stack
+    llm_enable: false
+    llm_variant: ollama
+    ollama_models: []
+    textgen_port: 7860
+
+  tasks:
+    - name: Install requested server meta-packages
+      ansible.builtin.import_role:
+        name: server_metapackage_base
+      vars:
+        server_task: "{{ item }}"
+      loop: "{{ server_tasks }}"
+      when: server_tasks | length > 0
+
+    - name: Configure LLM server
+      ansible.builtin.include_role:
+        name: llm_server
+      when: llm_enable | bool

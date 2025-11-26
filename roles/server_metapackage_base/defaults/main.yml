@@ -1,0 +1,15 @@
+---
+# Server meta-package to install (tasksel tasks or apt meta packages)
+server_task: ""
+
+# Map logical task names to installable package strings.
+# Tasksel tasks usually require a trailing caret when installed via apt.
+server_task_package_map:
+  ubuntu-server: ubuntu-server
+  openssh-server: openssh-server
+  lamp-server: "lamp-server^"
+  dns-server: "dns-server^"
+  mail-server: "mail-server^"
+  samba-server: "samba-server^"
+  print-server: "print-server^"
+  postgresql-server: postgresql

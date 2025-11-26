@@ -1,0 +1,6 @@
+---
+- name: Install openssh-server meta-package
+  ansible.builtin.import_role:
+    name: server_metapackage_base
+  vars:
+    server_task: openssh-server

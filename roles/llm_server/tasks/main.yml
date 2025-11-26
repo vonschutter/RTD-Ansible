@@ -1,0 +1,19 @@
+---
+- name: Assert Ubuntu/Debian target
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "Debian"
+    fail_msg: "llm_server role is intended for Ubuntu/Debian hosts."
+
+- name: Include Ollama installer
+  ansible.builtin.import_tasks: ollama.yml
+  when: llm_variant == "ollama"
+
+- name: Include text-generation-webui installer
+  ansible.builtin.import_tasks: textgen.yml
+  when: llm_variant == "text-generation-webui"
+
+- name: Warn when variant is unknown
+  ansible.builtin.debug:
+    msg: "Variant '{{ llm_variant }}' not recognized. Supported: ollama, text-generation-webui."
+  when: llm_variant not in ["ollama", "text-generation-webui"]
