@@ -3,7 +3,7 @@
 Configures an Ubuntu host as an LLM server. Supports multiple variants via `llm_variant`.
 
 ## Supported variants
-- `ollama` (default): installs via the official install script and optionally pulls models via `ollama_models`.
+- `ollama` (default): installs via snap (`snap install --classic ollama`) and optionally pulls models via `ollama_models`.
 - `text-generation-webui`: clones the upstream repo, builds a venv, and runs a systemd service listening on `0.0.0.0:{{ textgen_port }}`.
 
 ## Variables

@@ -2,7 +2,7 @@
 # Which LLM server to deploy on Ubuntu
 llm_variant: ollama  # choices: ollama, text-generation-webui
 
-# Ollama settings
+# Ollama settings (snap-based install)
 ollama_install_url: https://ollama.ai/install.sh
 ollama_models: []  # e.g. ['llama3', 'mistral']
 

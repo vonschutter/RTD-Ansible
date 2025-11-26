@@ -1,33 +1,34 @@
 ---
-- name: Ensure prerequisites for Ollama installer
+- name: Ensure snapd is present
   ansible.builtin.apt:
-    name:
-      - curl
-      - ca-certificates
+    name: snapd
     state: present
     update_cache: yes
 
-- name: Download Ollama install script
-  ansible.builtin.get_url:
-    url: "{{ ollama_install_url }}"
-    dest: /tmp/ollama-install.sh
-    mode: "0755"
-
-- name: Install Ollama
-  ansible.builtin.command: /bin/bash /tmp/ollama-install.sh
-  args:
-    creates: /usr/local/bin/ollama
-
-- name: Ensure Ollama service is running
+- name: Ensure snapd socket active
   ansible.builtin.systemd:
-    name: ollama
-    enabled: true
+    name: snapd.socket
     state: started
-  register: ollama_service_status
+    enabled: true
+  when: ansible_service_mgr == "systemd"
+
+- name: Install Ollama via snap
+  ansible.builtin.command: snap install --classic ollama
+  args:
+    creates: /snap/bin/ollama
+  register: ollama_snap_install
+  changed_when: "'already installed' not in (ollama_snap_install.stdout | default('') ~ ollama_snap_install.stderr | default(''))"
   failed_when: false
 
+- name: Ensure Ollama snap service is running
+  ansible.builtin.systemd:
+    name: snap.ollama.ollama.service
+    enabled: true
+    state: started
+  when: ansible_service_mgr == "systemd"
+
 - name: Pull requested models
-  ansible.builtin.command: "ollama pull {{ item }}"
+  ansible.builtin.command: "/snap/bin/ollama pull {{ item }}"
   environment:
     OLLAMA_HOST: "127.0.0.1"
   loop: "{{ ollama_models }}"
