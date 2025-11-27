@@ -17,7 +17,7 @@
 
   tasks:
     - name: Install requested server meta-packages
-      ansible.builtin.import_role:
+      ansible.builtin.include_role:
         name: server_metapackage_base
       vars:
         server_task: "{{ item }}"
