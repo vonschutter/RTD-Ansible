@@ -20,9 +20,34 @@
   changed_when: "'already installed' not in (ollama_snap_install.stdout | default('') ~ ollama_snap_install.stderr | default(''))"
   failed_when: false
 
-- name: Ensure Ollama snap service is running
+- name: Create systemd unit for Ollama serve
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/ollama.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Ollama LLM Service
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/snap/bin/ollama serve
+      Restart=on-failure
+      User=root
+      Group=root
+
+      [Install]
+      WantedBy=multi-user.target
+  when: ansible_service_mgr == "systemd"
+
+- name: Reload systemd for Ollama unit
   ansible.builtin.systemd:
-    name: snap.ollama.ollama.service
+    daemon_reload: true
+  when: ansible_service_mgr == "systemd"
+
+- name: Ensure Ollama service is running
+  ansible.builtin.systemd:
+    name: ollama.service
     enabled: true
     state: started
   when: ansible_service_mgr == "systemd"
