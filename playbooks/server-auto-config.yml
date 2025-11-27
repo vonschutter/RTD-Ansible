@@ -5,6 +5,7 @@
   gather_facts: true
 
   vars:
+    ansible_roles_path: "{{ playbook_dir | dirname }}/roles:{{ playbook_dir }}/roles"
     # Provide server tasks to install (tasksel/apt meta packages).
     # Examples: ubuntu-server, openssh-server, lamp-server, dns-server, mail-server, samba-server, print-server, postgresql-server
     server_tasks: []
