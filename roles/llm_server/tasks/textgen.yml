@@ -1,4 +1,29 @@
 ---
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD-Ansible Text Generation WebUI installer //::::::::// Ansible //::::::::::::::::::::::
+#:: Purpose:
+#::   Install and start text-generation-webui for the llm_server role when
+#::   llm_variant is set to "text-generation-webui".
+#::
+#:: How this file works:
+#::   - Installs system packages required to clone and build Python packages.
+#::   - Creates the application directory at textgen_root.
+#::   - Clones textgen_repo at textgen_git_version.
+#::   - Creates a Python virtual environment at textgen_venv.
+#::   - Installs the upstream requirements.txt into that virtual environment.
+#::   - Creates and starts a systemd service listening on textgen_port.
+#::
+#:: Related defaults:
+#::   - llm_variant selects this file from tasks/main.yml.
+#::   - textgen_root controls where the application is installed.
+#::   - textgen_repo controls which Git repository is cloned.
+#::   - textgen_venv controls where Python dependencies are installed.
+#::   - textgen_port controls the service listen port.
+#::   - textgen_git_version controls which branch, tag, or commit is deployed.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Install build and Python tooling required by text-generation-webui.
 - name: Install text-generation-webui dependencies
   ansible.builtin.apt:
     name:
@@ -9,6 +34,7 @@
     state: present
     update_cache: yes
 
+# Ensure the target application directory exists before cloning the repo.
 - name: Create application directory
   ansible.builtin.file:
     path: "{{ textgen_root }}"
@@ -17,6 +43,7 @@
     group: root
     mode: "0755"
 
+# Clone or update the selected text-generation-webui Git ref.
 - name: Fetch text-generation-webui
   ansible.builtin.git:
     repo: "{{ textgen_repo }}"
@@ -24,17 +51,20 @@
     version: "{{ textgen_git_version }}"
     update: yes
 
+# Create a dedicated virtual environment for the web UI dependencies.
 - name: Ensure virtualenv exists
   ansible.builtin.command: "python3 -m venv {{ textgen_venv }}"
   args:
     creates: "{{ textgen_venv }}/bin/activate"
 
+# Install upstream Python dependencies into the role-managed virtualenv.
 - name: Install Python requirements
   ansible.builtin.pip:
     requirements: "{{ textgen_root }}/requirements.txt"
     virtualenv: "{{ textgen_venv }}"
     extra_args: "--upgrade"
 
+# Run the web UI as a systemd service so it starts now and after reboot.
 - name: Create systemd service for text-generation-webui
   ansible.builtin.copy:
     dest: /etc/systemd/system/text-generation-webui.service
@@ -54,10 +84,12 @@
       [Install]
       WantedBy=multi-user.target
 
+# Reload systemd so the new service file can be started.
 - name: Reload systemd units
   ansible.builtin.systemd:
     daemon_reload: yes
 
+# Enable text-generation-webui at boot and start it immediately.
 - name: Start text-generation-webui
   ansible.builtin.systemd:
     name: text-generation-webui

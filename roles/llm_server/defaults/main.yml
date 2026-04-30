@@ -1,14 +1,69 @@
 ---
-# Which LLM server to deploy on Ubuntu
-llm_variant: ollama  # choices: ollama, text-generation-webui
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD-Ansible role defaults for: llm_server //::::::::::::::::::::// Ansible //::::::::::::
+#:: Purpose:
+#::   This file defines the default configuration values used by the llm_server
+#::   Ansible role. Defaults are intentionally safe to override from a playbook,
+#::   inventory, host_vars, group_vars, or the ansible-playbook command line.
+#::
+#:: How the role uses these values:
+#::   - tasks/main.yml checks llm_variant and imports the matching installer.
+#::   - tasks/ollama.yml uses ollama_models when the Ollama variant is selected.
+#::   - tasks/textgen.yml uses the textgen_* values when the
+#::     text-generation-webui variant is selected.
+#::
+#:: Supported variants:
+#::   - ollama: installs Ollama through snap, creates an ollama.service systemd
+#::     unit, starts it, and optionally pulls models listed in ollama_models.
+#::   - text-generation-webui: clones the upstream web UI repository, creates a
+#::     Python virtual environment, installs requirements, and starts a systemd
+#::     service listening on textgen_port.
+#::
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-# Ollama settings (snap-based install)
+# Select which LLM server implementation this role should install.
+# Valid values:
+#   - ollama
+#   - text-generation-webui
+llm_variant: ollama
+
+# Ollama settings.
+#
+# The current Ollama task file installs Ollama with:
+#   snap install --classic ollama
+#
+# This URL is kept as a default for compatibility or future installer changes,
+# but it is not currently used by roles/llm_server/tasks/ollama.yml.
 ollama_install_url: https://ollama.ai/install.sh
-ollama_models: []  # e.g. ['llama3', 'mistral']
 
-# text-generation-webui settings
+# Models to pull after the Ollama service has been started.
+# Leave this list empty to install Ollama without downloading models.
+#
+# Example:
+#   ollama_models:
+#     - llama3
+#     - mistral
+ollama_models: []
+
+# text-generation-webui settings.
+#
+# Directory where the upstream application repository is cloned.
 textgen_root: /opt/text-generation-webui
+
+# Git repository used for text-generation-webui.
 textgen_repo: https://github.com/oobabooga/text-generation-webui.git
+
+# Python virtual environment path used to install and run the web UI.
+# This normally stays under textgen_root so the application and dependencies
+# are kept together.
 textgen_venv: "{{ textgen_root }}/venv"
+
+# TCP port used by the generated text-generation-webui systemd service.
+# The service listens on 0.0.0.0, so firewall and network exposure should be
+# handled outside this role if the host is reachable from other machines.
 textgen_port: 7860
+
+# Git branch, tag, or commit to deploy for text-generation-webui.
+# Pin this to a tag or commit for more reproducible installs.
 textgen_git_version: main

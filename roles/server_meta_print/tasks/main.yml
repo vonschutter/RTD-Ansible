@@ -1,4 +1,19 @@
 ---
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD print server metapackage wrapper //:::::::::::::::// Ansible //::::::::::::::::::::::
+#:: Purpose:
+#::   Install the Ubuntu/Debian print server task through the shared
+#::   server_metapackage_base role.
+#::
+#:: How this file works:
+#::   - Imports server_metapackage_base.
+#::   - Sets server_task to print-server.
+#::   - server_metapackage_base resolves print-server through
+#::     server_task_package_map and performs the apt/tasksel install.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Wrapper role: request the print server capability from the shared base role.
 - name: Install print-server task
   ansible.builtin.import_role:
     name: server_metapackage_base

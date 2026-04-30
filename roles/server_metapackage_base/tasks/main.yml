@@ -1,19 +1,44 @@
 ---
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD server metapackage installer //::::::::::::::::::::// Ansible //:::::::::::::::::::::
+#:: Purpose:
+#::   Install one Ubuntu/Debian server capability from the logical server_task
+#::   value supplied by a playbook or wrapper role.
+#::
+#:: How this file works:
+#::   - Validates that the target host is Debian-family.
+#::   - Resolves server_task through server_task_package_map from defaults.
+#::   - Fails early when the requested task is missing or unknown.
+#::   - Installs tasksel when the resolved package string is a tasksel task.
+#::   - Performs an apt dry-run before installing.
+#::   - Installs the resolved package when it is available on the host.
+#::   - Warns instead of failing when the package is unavailable.
+#::
+#:: Related defaults:
+#::   - server_task is the logical task requested by the caller.
+#::   - server_task_package_map maps logical names to apt or tasksel strings.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Guardrail: this role uses apt and Ubuntu/Debian server task names.
 - name: Assert Ubuntu apt-based target
   ansible.builtin.assert:
     that:
       - ansible_os_family == "Debian"
     fail_msg: "server_metapackage_base is intended for Ubuntu/Debian targets."
 
+# Translate the caller's logical server_task into the real install target.
 - name: Resolve package name for task {{ server_task | default('unset') }}
   ansible.builtin.set_fact:
     _server_pkg_name: "{{ server_task_package_map.get(server_task, '') }}"
 
+# Stop when the caller did not provide a supported server_task value.
 - name: Fail when server_task is not provided or not mapped
   ansible.builtin.fail:
     msg: "Unknown or missing server_task '{{ server_task }}'. Update server_task_package_map or pass a valid key."
   when: _server_pkg_name | length == 0
 
+# Tasksel-style apt installs use a trailing caret and require tasksel.
 - name: Ensure tasksel is present for task installs
   ansible.builtin.apt:
     name: tasksel
@@ -21,12 +46,14 @@
     update_cache: yes
   when: _server_pkg_name is search('\\^')
 
+# Check package availability without changing the system.
 - name: Dry-run install to confirm availability
   ansible.builtin.command: "apt-get -s install -y {{ _server_pkg_name }}"
   register: server_pkg_check
   changed_when: false
   failed_when: false
 
+# Install the resolved package or task when the apt dry-run succeeds.
 - name: Install server meta-package {{ _server_pkg_name }}
   ansible.builtin.apt:
     name: "{{ _server_pkg_name }}"
@@ -35,6 +62,8 @@
     install_recommends: yes
   when: server_pkg_check.rc == 0
 
+# Keep the play running when a mapped package is unavailable on this host or OS
+# release, but make the skipped install visible in output.
 - name: Warn if package {{ _server_pkg_name }} is unavailable on this host
   ansible.builtin.debug:
     msg: "Package {{ _server_pkg_name }} not available (rc={{ server_pkg_check.rc }}). Skipping."

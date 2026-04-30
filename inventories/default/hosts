@@ -1,52 +1,54 @@
-# This is the default ansible 'hosts' file.
-#
-# It should live in /etc/ansible/hosts
-#
-#   - Comments begin with the '#' character
-#   - Blank lines are ignored
-#   - Groups of hosts are delimited by [header] elements
-#   - You can enter hostnames or ip addresses
-#   - A hostname/ip can be a member of multiple groups
+#::                                   ANSIBLE INVENTORY
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD-Ansible default inventory //:::::::::::::::::::::::// Ansible / Linux //:::::::::::::
+#:: Purpose:
+#::   Define the default inventory groups used by RTD-Ansible playbooks and
+#::   wrapper scripts.
+#::
+#:: How this file works:
+#::   - ansible.cfg points inventory to ./inventories/default/hosts.
+#::   - [localhost] targets the control machine with a local connection.
+#::   - [wks] contains the default workstation address range.
+#::   - [all_servers] contains the default managed server address range.
+#::   - [workstations] is a readable alias group that includes [wks].
+#::   - [servers] is a readable alias group that includes [all_servers].
+#::   - [all_hosts] includes both workstation and server groups.
+#::
+#:: Usage:
+#::   Run Ansible from the repository root so ansible.cfg loads this inventory:
+#::
+#::     ansible-playbook playbooks/server-auto-config.yml
+#::     ./scripts/update-all-server-software.sh
+#::
+#:: Notes:
+#::   Inventory groups use standard Ansible INI syntax. Host ranges such as
+#::   192.168.1.[2:199] expand to every address in that range. A host may be a
+#::   member of more than one group if it is listed in multiple sections or
+#::   inherited through a :children group.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-# Ex 1: Ungrouped hosts, specify before any group headers.
-
-#green.example.com
-#blue.example.com
-#192.168.100.1
-#192.168.100.10
-
-# Ex 2: A collection of hosts belonging to the 'webservers' group
-
-#[webservers]
-#alpha.example.org
-#beta.example.org
-#192.168.1.100
-#192.168.1.110
-
-# If you have multiple hosts following a pattern you can specify
-# them like this:
-
-#www[001:006].example.com
-
-# Ex 3: A collection of database servers in the 'dbservers' group
-
-#[dbservers]
-#
-#db01.intranet.mydomain.net
-#db02.intranet.mydomain.net
-#10.25.1.56
-#10.25.1.57
-
-# Here's another example of host ranges, this time there are no
-# leading 0s:
-
-#db-[99:101]-node.example.com
-
+# Local control host. Used by local-only playbooks and generated site playbooks.
 [localhost]
 localhost ansible_connection=local
 
+# Default workstation range.
 [wks]
 192.168.1.[2:199]
 
+# Default managed server range.
+# update-all-server-software.sh runs the update playbook for this group.
 [all_servers]
 192.168.1.[200:254]
+
+# Friendly alias for the workstation group.
+[workstations:children]
+wks
+
+# Friendly alias for the managed server group.
+[servers:children]
+all_servers
+
+# Friendly alias for all hosts.
+[all_hosts:children]
+wks
+all_servers

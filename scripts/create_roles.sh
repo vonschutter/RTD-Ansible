@@ -1,12 +1,66 @@
 #!/usr/bin/env bash
-
-# Description:
-#   Auto-generates Ansible role directories and inserts stub files
-#   based on Bash recipe functions in a remote _rtd_recipies.info file.
-#   Optionally parses the content of each function and maps snap/flatpak/native
-#   installs to YAML.
 #
-# Author: RTD Automation Assistant
+#::                                   A D M I N   C O M M A N D
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// Create RTD Ansible Roles //::::::::::::::::::::::::::::// Ansible / Linux //:::::::::::::
+#:: Author(s):    RTD
+#:: Version:      1.00
+#::
+#:: Script:       create_roles.sh
+#::
+#:: Purpose:      Create RTD-Ansible role directories and starter files from
+#::               recipe functions in the upstream _rtd_recipies.info file.
+#::
+#:: Description:  This script downloads the RTD recipe source, extracts recipe
+#::               function blocks directly with awk, sanitizes recipe names into
+#::               Ansible role names, creates each role scaffold, and appends
+#::               generated package installation tasks for supported software
+#::               helper calls.
+#::
+#:: Value:        Provides an alternate role creation path that does not source
+#::               the downloaded recipe file as shell code. It can be useful for
+#::               creating baseline role directories from raw recipe function
+#::               text.
+#::
+#:: Usage:        Run this script directly from any directory:
+#::
+#::                 ./scripts/create_roles.sh
+#::                 scripts/create_roles.sh
+#::                 /full/path/to/RTD-Ansible/scripts/create_roles.sh
+#::
+#:: Requirements: - Bash 4+ is recommended for strict mode, extglob, and
+#::                 process substitution.
+#::               - curl must be installed and able to reach the configured
+#::                 recipe URL.
+#::               - awk, sed, grep, tr, and standard GNU userland tools must be
+#::                 available on the control machine.
+#::               - The user must have write access to the repository roles/
+#::                 directory.
+#::
+#:: Behavior:     - Determines the repository roles/ path from this script's
+#::                 location.
+#::               - Downloads _rtd_recipies.info from the RTD-Setup repository.
+#::               - Extracts recipe function bodies without sourcing the recipe
+#::                 file.
+#::               - Creates roles/<role>/tasks/main.yml,
+#::                 roles/<role>/defaults/main.yml, and roles/<role>/README.md.
+#::               - Converts supported software helpers for Snap, Flatpak, and
+#::                 native package installs into Ansible tasks.
+#::               - Overwrites matching generated files for existing roles.
+#::               - Exits immediately on failed commands because strict mode is
+#::                 enabled.
+#::
+#:: Related:      Current role generation and playbook helper scripts:
+#::
+#::                 scripts/rtd-rolegen
+#::                 scripts/generate_roles.sh
+#::                 scripts/generate_playbook.sh
+#::
+#:: Notes:        This script is path-location aware. Generated output is always
+#::               written relative to the RTD-Ansible repository containing this
+#::               script, regardless of the launch directory.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#
 
 set -euo pipefail
 shopt -s extglob

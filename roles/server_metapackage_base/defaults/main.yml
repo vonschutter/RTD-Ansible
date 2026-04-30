@@ -1,5 +1,27 @@
 ---
-# Server meta-package to install (tasksel tasks or apt meta packages)
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD server metapackage defaults //::::::::::::::::::::// Ansible //::::::::::::::::::::::
+#:: Purpose:
+#::   Define the default input and package mapping used by the
+#::   server_metapackage_base role.
+#::
+#:: How this file works:
+#::   - server_task is the logical server capability requested by a playbook or
+#::     wrapper role.
+#::   - server_task_package_map translates that logical value into the apt
+#::     package or tasksel task string installed by tasks/main.yml.
+#::   - Wrapper roles such as server_meta_dns and server_meta_lamp set
+#::     server_task for common server capabilities.
+#::
+#:: Notes:
+#::   Tasksel tasks installed through apt use a trailing caret, for example
+#::   "lamp-server^". Plain apt packages do not use the caret.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Server meta-package or tasksel task to install.
+# This is intentionally empty by default so callers must choose a valid key
+# from server_task_package_map or pass an override.
 server_task: ""
 
 # Map logical task names to installable package strings.

@@ -1,6 +1,69 @@
 #!/usr/bin/env bash
-
-# RTD Role Generator – Corrected loop context (no subshells)
+#
+#::                                   A D M I N   C O M M A N D
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// Generate RTD Ansible Roles //::::::::::::::::::::::::::// Ansible / Linux //:::::::::::::
+#:: Author(s):    RTD
+#:: Version:      1.00
+#::
+#:: Script:       generate_roles.sh
+#::
+#:: Purpose:      Generate RTD-Ansible role directories from RTD recipe
+#::               functions defined in the upstream _rtd_recipies.info file.
+#::
+#:: Description:  This script downloads the RTD recipe source, normalizes recipe
+#::               function names so Bash can source them, discovers all recipe
+#::               functions, and converts recognized software installation
+#::               helper calls into Ansible role task files.
+#::
+#:: Value:        Keeps RTD-Ansible roles aligned with the central RTD recipe
+#::               definitions and reduces manual role scaffolding for software
+#::               installation recipes.
+#::
+#:: Usage:        Run this script directly from any directory:
+#::
+#::                 ./scripts/generate_roles.sh
+#::                 scripts/generate_roles.sh
+#::                 /full/path/to/RTD-Ansible/scripts/generate_roles.sh
+#::
+#::               This script is also called by:
+#::
+#::                 scripts/rtd-rolegen generate-roles
+#::                 scripts/rtd-rolegen reset-all
+#::
+#:: Requirements: - Bash 4+ is required for arrays, mapfile, and process
+#::                 substitution.
+#::               - curl must be installed and able to reach the configured
+#::                 recipe URL.
+#::               - sed, grep, awk, tr, mktemp, and standard GNU userland tools
+#::                 must be available on the control machine.
+#::               - The user must have write access to the repository roles/
+#::                 directory.
+#::
+#:: Behavior:     - Determines the repository roles/ path from this script's
+#::                 location.
+#::               - Downloads _rtd_recipies.info from the RTD-Setup repository.
+#::               - Normalizes recipe function names before sourcing the
+#::                 temporary recipe file.
+#::               - Creates roles/<role>/tasks/main.yml,
+#::                 roles/<role>/defaults/main.yml, and roles/<role>/README.md.
+#::               - Converts supported software helpers for Snap, Flatpak, and
+#::                 native package installs into Ansible tasks.
+#::               - Uses the first underscore-delimited part of the generated
+#::                 role name as the role tag.
+#::               - Removes temporary files after generation completes.
+#::
+#:: Related:      Helper scripts and callers:
+#::
+#::                 scripts/rtd-rolegen
+#::                 scripts/generate_playbook.sh
+#::                 scripts/create_roles.sh
+#::
+#:: Notes:        Existing generated role files with matching names are
+#::               overwritten. Paths are based on this script's location, not
+#::               the directory from which the user launched it.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#
 
 set -euo pipefail
 

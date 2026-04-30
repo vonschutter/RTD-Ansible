@@ -1,4 +1,19 @@
 ---
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD Samba server metapackage wrapper //:::::::::::::::// Ansible //::::::::::::::::::::::
+#:: Purpose:
+#::   Install the Ubuntu/Debian Samba server task through the shared
+#::   server_metapackage_base role.
+#::
+#:: How this file works:
+#::   - Imports server_metapackage_base.
+#::   - Sets server_task to samba-server.
+#::   - server_metapackage_base resolves samba-server through
+#::     server_task_package_map and performs the apt/tasksel install.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Wrapper role: request the Samba server capability from the shared base role.
 - name: Install samba-server task
   ansible.builtin.import_role:
     name: server_metapackage_base

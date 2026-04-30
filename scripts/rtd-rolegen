@@ -1,4 +1,69 @@
 #!/usr/bin/env bash
+#
+#::                                   A D M I N   C O M M A N D
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD Role Generator CLI //::::::::::::::::::::::::::::::// Ansible / Linux //:::::::::::::
+#:: Author(s):    RTD
+#:: Version:      1.00
+#::
+#:: Script:       rtd-rolegen
+#::
+#:: Purpose:      Provide a single command-line entry point for generating,
+#::               listing, linting, documenting, and running RTD Ansible roles.
+#::
+#:: Description:  This script wraps the RTD role generation helpers and manages
+#::               playbooks under the repository playbooks/ directory. It can
+#::               regenerate roles from recipe definitions, build an all-role
+#::               site.yml playbook, build group-specific playbooks from role
+#::               tags, run a single role, lint role task files, and create a
+#::               markdown role index.
+#::
+#:: Value:        Gives RTD-Ansible one consistent operator interface for role
+#::               automation instead of requiring direct use of each helper
+#::               script or manual playbook creation.
+#::
+#:: Usage:        Run this script directly from any directory:
+#::
+#::                 ./scripts/rtd-rolegen help
+#::                 scripts/rtd-rolegen generate-roles
+#::                 scripts/rtd-rolegen generate-playbook
+#::                 scripts/rtd-rolegen site cloud
+#::                 scripts/rtd-rolegen install-role server_metapackage_base
+#::                 scripts/rtd-rolegen lint
+#::                 scripts/rtd-rolegen build-docs
+#::                 scripts/rtd-rolegen list
+#::                 scripts/rtd-rolegen reset-all
+#::
+#:: Requirements: - Bash 4+ is required for arrays and strict shell options.
+#::               - Ansible must be installed for install-role.
+#::               - ansible-lint must be installed for lint.
+#::               - roles/ must exist or be generated before playbooks, lint,
+#::                 list, or documentation commands are useful.
+#::               - scripts/generate_roles.sh must be executable for role
+#::                 generation and reset-all.
+#::
+#:: Behavior:     - Determines repository paths from this script's location.
+#::               - Writes generated playbooks to playbooks/.
+#::               - Selects group playbook roles by matching tags in each
+#::                 role's tasks/main.yml file.
+#::               - Writes generated role documentation to ROLES.md.
+#::               - reset-all removes generated roles and generated site or
+#::                 install playbooks before recreating roles and site.yml.
+#::               - Exits immediately on failed commands because strict mode is
+#::                 enabled.
+#::
+#:: Related:      Helper scripts used by or related to this CLI:
+#::
+#::                 scripts/generate_roles.sh
+#::                 scripts/generate_playbook.sh
+#::                 scripts/create_roles.sh
+#::
+#:: Notes:        This script is path-location aware. Commands may be launched
+#::               from outside the repository, but generated output is always
+#::               written relative to the RTD-Ansible repository containing
+#::               this script.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#
 
 set -euo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

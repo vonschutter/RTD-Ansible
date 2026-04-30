@@ -1,18 +1,58 @@
 ---
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD-Ansible role tasks for: llm_server //::::::::::::::::::::::// Ansible //:::::::::::::
+#:: Purpose:
+#::   This file is the main task entry point for the llm_server role. It
+#::   validates that the target host is Debian-family, then selects the correct
+#::   LLM server installer based on the llm_variant default or override.
+#::
+#:: How this file works:
+#::   - llm_variant is defined in roles/llm_server/defaults/main.yml.
+#::   - When llm_variant is "ollama", this file imports tasks/ollama.yml.
+#::   - When llm_variant is "text-generation-webui", this file imports
+#::     tasks/textgen.yml.
+#::   - When llm_variant has any other value, the role warns the operator
+#::     instead of silently doing nothing.
+#::
+#:: Related defaults:
+#::   - llm_variant controls which installer task file is imported.
+#::   - ollama_models is consumed by tasks/ollama.yml after the Ollama service
+#::     has started.
+#::   - textgen_root, textgen_repo, textgen_venv, textgen_port, and
+#::     textgen_git_version are consumed by tasks/textgen.yml.
+#::
+#:: Supported variants:
+#::   - ollama
+#::   - text-generation-webui
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Guardrail: this role is written for Ubuntu/Debian hosts.
+# The installer task files use apt, snapd, and systemd assumptions that are not
+# portable to other OS families without changes.
 - name: Assert Ubuntu/Debian target
   ansible.builtin.assert:
     that:
       - ansible_os_family == "Debian"
     fail_msg: "llm_server role is intended for Ubuntu/Debian hosts."
 
+# Default path from defaults/main.yml.
+# Installs Ollama through snap, creates an ollama.service unit, starts the
+# service, and optionally pulls each model listed in ollama_models.
 - name: Include Ollama installer
   ansible.builtin.import_tasks: ollama.yml
   when: llm_variant == "ollama"
 
+# Alternative LLM server path.
+# Clones text-generation-webui, creates a Python virtual environment, installs
+# requirements, and creates a systemd service listening on textgen_port.
 - name: Include text-generation-webui installer
   ansible.builtin.import_tasks: textgen.yml
   when: llm_variant == "text-generation-webui"
 
+# Operator feedback for unsupported values.
+# This does not fail the play; it makes an invalid llm_variant visible in the
+# play output while avoiding an unintended install path.
 - name: Warn when variant is unknown
   ansible.builtin.debug:
     msg: "Variant '{{ llm_variant }}' not recognized. Supported: ollama, text-generation-webui."

@@ -1,4 +1,19 @@
 ---
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD OpenSSH server metapackage wrapper //::::::::::::// Ansible //:::::::::::::::::::::::
+#:: Purpose:
+#::   Install the Ubuntu/Debian OpenSSH server package through the shared
+#::   server_metapackage_base role.
+#::
+#:: How this file works:
+#::   - Imports server_metapackage_base.
+#::   - Sets server_task to openssh-server.
+#::   - server_metapackage_base resolves openssh-server through
+#::     server_task_package_map and performs the apt install.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Wrapper role: request the OpenSSH server capability from the shared base role.
 - name: Install openssh-server meta-package
   ansible.builtin.import_role:
     name: server_metapackage_base

@@ -1,10 +1,34 @@
 ---
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD-Ansible Ollama installer //::::::::::::::::::::::::// Ansible //:::::::::::::::::::::
+#:: Purpose:
+#::   Install and start the Ollama LLM service for the llm_server role when
+#::   llm_variant is set to "ollama".
+#::
+#:: How this file works:
+#::   - Installs snapd through apt.
+#::   - Starts and enables snapd.socket when systemd is available.
+#::   - Installs Ollama from snap with classic confinement.
+#::   - Creates /etc/systemd/system/ollama.service to run "ollama serve".
+#::   - Starts and enables the Ollama service.
+#::   - Pulls any models listed in ollama_models.
+#::
+#:: Related defaults:
+#::   - llm_variant selects this file from tasks/main.yml.
+#::   - ollama_models controls which models are pulled after service startup.
+#::   - ollama_install_url exists in defaults/main.yml for compatibility or
+#::     future use, but this file currently installs Ollama through snap.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Install snapd because this role uses the snap package for Ollama.
 - name: Ensure snapd is present
   ansible.builtin.apt:
     name: snapd
     state: present
     update_cache: yes
 
+# Start the snapd socket on systemd hosts so snap commands can operate.
 - name: Ensure snapd socket active
   ansible.builtin.systemd:
     name: snapd.socket
@@ -12,6 +36,8 @@
     enabled: true
   when: ansible_service_mgr == "systemd"
 
+# Install Ollama with classic confinement.
+# The creates guard keeps the task idempotent when /snap/bin/ollama exists.
 - name: Install Ollama via snap
   ansible.builtin.command: snap install --classic ollama
   args:
@@ -20,6 +46,7 @@
   changed_when: "'already installed' not in (ollama_snap_install.stdout | default('') ~ ollama_snap_install.stderr | default(''))"
   failed_when: false
 
+# Provide a dedicated systemd service that runs the Ollama API/server process.
 - name: Create systemd unit for Ollama serve
   ansible.builtin.copy:
     dest: /etc/systemd/system/ollama.service
@@ -40,11 +67,13 @@
       WantedBy=multi-user.target
   when: ansible_service_mgr == "systemd"
 
+# Reload systemd so the newly written ollama.service unit is available.
 - name: Reload systemd for Ollama unit
   ansible.builtin.systemd:
     daemon_reload: true
   when: ansible_service_mgr == "systemd"
 
+# Enable Ollama at boot and start it now.
 - name: Ensure Ollama service is running
   ansible.builtin.systemd:
     name: ollama.service
@@ -52,6 +81,8 @@
     state: started
   when: ansible_service_mgr == "systemd"
 
+# Optional model preloading.
+# Leave ollama_models empty to skip downloads during role execution.
 - name: Pull requested models
   ansible.builtin.command: "/snap/bin/ollama pull {{ item }}"
   environment:

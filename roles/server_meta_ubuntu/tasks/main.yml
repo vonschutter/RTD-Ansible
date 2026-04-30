@@ -1,4 +1,19 @@
 ---
+#::                                   ANSIBLE ROLE
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::// RTD Ubuntu server metapackage wrapper //::::::::::::::// Ansible //::::::::::::::::::::::
+#:: Purpose:
+#::   Install the Ubuntu server package through the shared
+#::   server_metapackage_base role.
+#::
+#:: How this file works:
+#::   - Imports server_metapackage_base.
+#::   - Sets server_task to ubuntu-server.
+#::   - server_metapackage_base resolves ubuntu-server through
+#::     server_task_package_map and performs the apt install.
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# Wrapper role: request the Ubuntu server baseline from the shared base role.
 - name: Install ubuntu-server meta-package
   ansible.builtin.import_role:
     name: server_metapackage_base
