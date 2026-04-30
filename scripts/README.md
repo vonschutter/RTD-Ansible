@@ -18,7 +18,7 @@ Use `rtd-rolegen` for normal role and playbook automation:
 `rtd-rolegen` wraps the lower-level generator scripts and provides a consistent
 operator interface.
 
-
+```text
 rtd-rolegen
   └── generate_roles.sh
 
@@ -35,6 +35,7 @@ rtd-rolegen generate-playbook/site/install-role/build-docs/list/lint
 
 update-all-server-software.sh
   └── runs playbooks/update-all-server-software.yml
+```
 
 ## Script index
 
