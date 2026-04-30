@@ -10,8 +10,10 @@
 #::   - [localhost] targets the control machine with a local connection.
 #::   - [wks] contains the default workstation address range.
 #::   - [all_servers] contains the default managed server address range.
+#::   - [kvm_hosts] identifies managed servers that provide KVM virtualization.
+#::   - [plex_servers] identifies managed servers that provide Plex services.
 #::   - [workstations] is a readable alias group that includes [wks].
-#::   - [servers] is a readable alias group that includes [all_servers].
+#::   - [servers] is a readable alias group for server-related groups.
 #::   - [all_hosts] includes both workstation and server groups.
 #::
 #:: Usage:
@@ -24,7 +26,9 @@
 #::   Inventory groups use standard Ansible INI syntax. Host ranges such as
 #::   192.168.1.[2:199] expand to every address in that range. A host may be a
 #::   member of more than one group if it is listed in multiple sections or
-#::   inherited through a :children group.
+#::   inherited through a :children group. Specialized server groups may overlap
+#::   the all_servers range when a server needs a more specific operational
+#::   target.
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # Local control host. Used by local-only playbooks and generated site playbooks.
@@ -40,15 +44,32 @@ localhost ansible_connection=local
 [all_servers]
 192.168.1.[200:254]
 
+# Specialized managed server groups.
+# These hosts are also part of the all_servers address range, but are listed
+# separately so playbooks can target KVM hosts directly.
+[kvm_hosts]
+192.168.1.200
+192.168.1.202
+192.168.1.204
+192.168.1.223
+
+# Specialized managed server group for Plex workloads.
+[plex_servers]
+192.168.1.206
+
 # Friendly alias for the workstation group.
 [workstations:children]
 wks
 
-# Friendly alias for the managed server group.
+# Friendly alias for managed server groups.
 [servers:children]
 all_servers
+kvm_hosts
+plex_servers
 
-# Friendly alias for all hosts.
+# Friendly alias for all workstation and server groups.
 [all_hosts:children]
 wks
 all_servers
+kvm_hosts
+plex_servers
